@@ -6,15 +6,13 @@
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
   <title>LUCKY 7</title>
 
-  <!-- PWA (optional while offline) -->
-  <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#17173A" />
   <link rel="apple-touch-icon" href="icon-512.png">
 
   <style>
     :root { --bg:#17173A; --fg:#ffffff; --card:#ffffff; --accent:#ffffff; }
 
-    /* Single-scroll layout */
+    /* Layout */
     html, body {
       margin: 0; padding: 0; height: 100%;
       background: var(--bg); color: var(--fg);
@@ -22,14 +20,14 @@
       -webkit-text-size-adjust: none;
       touch-action: manipulation;
       overscroll-behavior: none;
-      overflow: hidden;                /* only .app may scroll */
+      overflow: hidden; /* only .app may scroll */
     }
     body.modal-open { overflow: hidden; height: 100%; }
 
     .app {
       height: 100dvh;
       display: flex; flex-direction: column;
-      overflow: auto;
+      overflow: auto; /* single scrollbar if needed */
       -webkit-overflow-scrolling: touch;
       padding:
         env(safe-area-inset-top)
@@ -45,51 +43,50 @@
 
     .logo { width: clamp(160px, 30vw, 360px); height: auto; margin: 0 auto 18px; }
 
-    .cards { display:flex; justify-content:center; flex-wrap:wrap; gap:12px; margin:20px 0; }
-    .card-container { perspective: 1000px; }
-
-    /* Wrapper owns border, radius, background & shadow (prevents mid-flip peek) */
-    .card {
-      border-radius: 12px;
-      border: 3px solid #fff;
-      background: #fff;
-      overflow: hidden;
-      box-shadow: 0 4px 8px rgba(0,0,0,.3);
-      transform-origin: center center;             /* for pulse */
+    .cards {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 20px 0;
     }
 
+    .card-container { perspective: 1000px; }
+
     .card-inner {
-      width:clamp(90px,12vw,120px);
-      height:clamp(150px,21vw,200px);
-      position:relative;
-      transform-style:preserve-3d;
-      transition:transform .6s;
-      cursor:pointer;
+      width: clamp(90px, 12vw, 120px);
+      height: clamp(150px, 21vw, 200px);
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s;
+      cursor: pointer;
     }
     .card.flipped .card-inner { transform: rotateY(180deg); cursor: default; }
 
-    /* Faces fill the card; no shadows here to avoid bleed while rotating */
     .card-face {
-      position:absolute; inset:0; width:100%; height:100%;
-      border-radius: inherit;
-      box-sizing: border-box;
-      display:flex; align-items:center; justify-content:center;
-      font-size:clamp(28px,4vw,48px); font-weight:bold;
-      backface-visibility:hidden; -webkit-backface-visibility:hidden;
-      box-shadow:none;
+      position: absolute; width: 100%; height: 100%;
+      border-radius: 12px; backface-visibility: hidden;
+      display: flex; align-items: center; justify-content: center;
+      font-size: clamp(28px, 4vw, 48px); font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
-    .card-front { background: royalblue; }
-    .card-back  {
-      background: var(--card);
-      color:#000;
-      transform: rotateY(180deg);
-      position:absolute; inset:0;
+    .card-front { background: royalblue; border: 3px solid #fff; box-sizing: border-box; }
+    .card-back  { background: var(--card); color: #000; border: 3px solid #fff; box-sizing: border-box; transform: rotateY(180deg); position: relative; }
+
+    /* ✅ keep the back face fully visible immediately on bust */
+    .card-back.show-now {
+      opacity: 1 !important;
+      transition-delay: 0s !important;
     }
 
     .position-label { font-size:clamp(14px,2vw,18px); margin-top:6px; color:var(--fg); }
 
     .button-row { display:flex; justify-content:center; gap:16px; margin-top:15px; }
-    #howToPlayButton { padding:8px 20px; min-width:120px; font-size:16px; font-weight:bold; border-radius:6px; background:var(--bg); color:var(--fg); border:2px solid var(--accent); cursor:pointer; }
+    #howToPlayButton {
+      padding:8px 20px; min-width:120px; font-size:16px; font-weight:bold;
+      border-radius:6px; background:var(--bg); color:var(--fg);
+      border:2px solid var(--accent); cursor:pointer;
+    }
     #howToPlayButton:hover{ background:#1e1e45; }
 
     .scoreboard{ display:flex; justify-content:center; gap:20px; margin-top:15px; }
@@ -105,58 +102,43 @@
 
     .copyright{ font-size:1em; margin-top:10px; opacity:.8; }
 
-    /* Confetti canvas (visible above game, below overlays) */
+    /* Confetti canvas (above game, below overlay text) */
     canvas.confetti { position:fixed; inset:0; pointer-events:none; z-index:10000; }
 
     /* Fullscreen toggle */
     .fs-toggle{ position:fixed; top:10px; right:10px; width:34px; height:34px; line-height:30px; text-align:center; font-size:20px; font-weight:900; color:#fff; background:rgba(0,0,0,.35); border:2px solid #fff; border-radius:8px; cursor:pointer; z-index:10002; backdrop-filter:blur(2px); }
     .fs-toggle:active{ transform:scale(.96); }
 
-    /* ===================== MODALS ===================== */
-    #promoModal{
-      display:none; position:fixed; z-index:10050; inset:0;
-      background:rgba(0,0,0,.75); backdrop-filter:blur(2px);
-      overflow:auto;
-    }
-    #promoContent{
-      background:#1D1D3F; color:#fff;
-      margin:32px auto 0;
-      padding:20px 22px; border-radius:12px;
-      max-width:420px; width:calc(100% - 40px);
-      text-align:left; box-shadow:0 10px 30px rgba(0,0,0,.35);
-    }
+    /* Promo modal */
+    #promoModal{ display:none; position:fixed; z-index:10050; inset:0; background:rgba(0,0,0,.75); backdrop-filter:blur(2px); overflow:auto; }
+    #promoContent{ background:#1D1D3F; color:#fff; margin:32px auto 0; padding:20px 22px; border-radius:12px; max-width:420px; width:calc(100% - 40px); text-align:left; box-shadow:0 10px 30px rgba(0,0,0,.35); }
     @media (max-height:640px){ #promoContent{ margin:16px auto 0; } }
 
-    #howToPlayModal{
-      display:none; position:fixed; z-index:10060; inset:0;
-      background:rgba(0,0,0,.75); backdrop-filter:blur(2px);
-      display:flex; align-items:center; justify-content:center;
-      padding:16px;
-    }
-    #howToPlayContent{
-      background:#1D1D3F; color:#fff;
-      padding:20px 22px; border-radius:12px;
-      max-width:420px; width:calc(100% - 40px);
-      text-align:left; box-shadow:0 10px 30px rgba(0,0,0,.35);
-      margin:0; max-height:90vh; overflow:auto;
-    }
+    /* How-to modal */
+    #howToPlayModal{ display:none; position:fixed; z-index:10060; inset:0; background:rgba(0,0,0,.75); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; padding:16px; }
+    #howToPlayContent{ background:#1D1D3F; color:#fff; padding:20px 22px; border-radius:12px; max-width:420px; width:calc(100% - 40px); text-align:left; box-shadow:0 10px 30px rgba(0,0,0,.35); margin:0; max-height:90vh; overflow:auto; }
     .howto-actions{ text-align:center; margin-top:14px; }
     .howto-actions button{ padding:10px 24px; background:#fff; color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
 
-    /* ========= Bust effects (whole card pulses) ========= */
+    /* Bust effects (calmer) */
     @keyframes bustBackgroundFlash {
-      0%{ background:rgba(255,0,0,.30) }
-      50%{ background:rgba(255,0,0,.90) }
-      100%{ background:rgba(255,0,0,.30) }
+      0%{ background:rgba(255,0,0,.25) }
+      50%{ background:rgba(255,0,0,.80) }
+      100%{ background:rgba(255,0,0,.25) }
     }
-    .card.bustFlash .card-back { animation: bustBackgroundFlash .6s infinite; color:#fff; }
+    .card.bustFlash .card-back {
+      animation: bustBackgroundFlash 0.85s infinite;
+      color:#fff;
+      opacity: 1 !important;
+      transition-delay: 0s !important;
+    }
 
     @keyframes bustPulseCard {
       0% { transform: scale(1); }
-      50%{ transform: scale(1.10); }
+      50%{ transform: scale(1.06); }
       100%{ transform: scale(1); }
     }
-    .card.pulse { animation: bustPulseCard .75s ease-in-out infinite; will-change: transform; }
+    .card.pulse { animation: bustPulseCard 1s ease-in-out infinite; }
 
     .bust-label {
       position:absolute; left:6px; right:6px; text-align:center;
@@ -210,107 +192,271 @@
   <div id="howToPlayModal" aria-modal="true" role="dialog">
     <div id="howToPlayContent">
       <h2 style="text-align:center; margin:0 0 10px;">How to Play</h2>
-      <p>🎯 You have 7 facedown cards numbered <strong>1 to 7</strong> on the front.</p>
-      <p>🔄 The back of each card has a number (also <strong>1 to 7</strong>) in a random order.</p>
-      <p>🃏 Start by picking any card.</p>
-      <p>📍 The number you reveal tells you which <strong>position</strong> you must flip next.</p>
-      <p>🏆 Reveal <strong>all 7 cards</strong> without repeating a position to win.</p>
-      <p>❌ If a number points to a card that’s already face-up, you <strong>bust</strong> and lose.</p>
+      <p>🎯 You have 7 facedown cards numbered <strong>1 to 7</strong>.</p>
+      <p>🔄 The back has numbers 1–7 in random order.</p>
+      <p>🃏 Pick any card. That number = next card position.</p>
+      <p>🏆 Reveal all 7 without repeats to win.</p>
+      <p>❌ If you’re sent to an already-open card, you bust.</p>
       <div class="howto-actions"><button onclick="closeHowToPlay()">Got it!</button></div>
     </div>
   </div>
 
-  <!-- Your game logic -->
-  <script src="app.js"></script>
-
-  <!-- Minimal helpers + bust pulse wrapper -->
+  <!-- ====== Inline Game Logic (no external JS needed) ====== -->
   <script>
-    // Promo modal: once per session
-    function showPromo(){
-      const m=document.getElementById('promoModal');
-      if(!m) return;
-      m.style.display='block';
-      document.body.classList.add('modal-open');
-    }
-    function closePromo(){
-      const m=document.getElementById('promoModal');
-      if(!m) return;
-      m.style.display='none';
-      document.body.classList.remove('modal-open');
-      sessionStorage.setItem('promoDismissed','1');
-    }
-    document.addEventListener('click',e=>{
-      if(e.target && e.target.id==='promoCloseBtn') closePromo();
-    });
-    window.addEventListener('DOMContentLoaded', ()=>{
-      if(!sessionStorage.getItem('promoDismissed')) showPromo();
-    });
+    /* ========= Confetti ========= */
+    (function () {
+      const canvas = document.createElement('canvas');
+      canvas.className = 'confetti';
+      const ctx = canvas.getContext('2d');
+      let W=0, H=0, particles=[], running=false, endTime=0, rafId=0;
 
-    // How-to modal handlers
-    (function(){
-      const howto=document.getElementById('howToPlayModal');
-      if(howto) howto.style.display='none';
+      function mount() {
+        if (!canvas.isConnected) document.body.appendChild(canvas);
+        resize();
+        window.addEventListener('resize', resize);
+      }
+      function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+      }
+      function spawn(n=6) {
+        for (let i=0;i<n;i++){
+          particles.push({
+            x: Math.random()*W,
+            y: -10,
+            vx: (Math.random()-0.5)*2,
+            vy: 2+Math.random()*3,
+            s: 4+Math.random()*6,
+            rot: Math.random()*Math.PI,
+            vr: (Math.random()-0.5)*0.2,
+            shape: Math.random()<0.5 ? 'rect' : 'circle',
+            colorIndex: Math.floor(Math.random()*5)
+          });
+        }
+      }
+      const COLORS = ['#FFD700','#FF3B3B','#4CAF50','#42A5F5','#FF9800'];
+
+      function step() {
+        ctx.clearRect(0,0,W,H);
+        particles.forEach(p=>{
+          p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+          if (p.y > H+20) { p.y = -10; p.x = Math.random()*W; }
+          ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+          ctx.fillStyle = COLORS[p.colorIndex % COLORS.length];
+          if (p.shape==='rect') ctx.fillRect(-p.s/2, -p.s/2, p.s, p.s*0.6);
+          else { ctx.beginPath(); ctx.arc(0,0,p.s/2,0,Math.PI*2); ctx.fill(); }
+          ctx.restore();
+        });
+      }
+      function loop() {
+        if (!running) return;
+        step();
+        if (Date.now() < endTime) {
+          spawn(3);
+          rafId = requestAnimationFrame(loop);
+        } else {
+          running = false;
+          particles = [];
+          ctx.clearRect(0,0,W,H);
+          cancelAnimationFrame(rafId);
+        }
+      }
+      window.launchConfetti = function(durationMs=3000) {
+        mount();
+        endTime = Date.now() + durationMs;
+        if (!running) { running = true; loop(); }
+      };
     })();
-    function showHowToPlay(){
-      const m=document.getElementById('howToPlayModal');
-      if(m) m.style.display='flex';
-      document.body.classList.add('modal-open');
-    }
-    function closeHowToPlay(){
-      const m=document.getElementById('howToPlayModal');
-      if(m) m.style.display='none';
-      document.body.classList.remove('modal-open');
-    }
+
+    /* ========= Modals ========= */
+    function showPromo(){const m=document.getElementById('promoModal');if(m){m.style.display='block';document.body.classList.add('modal-open');}}
+    function closePromo(){const m=document.getElementById('promoModal');if(m){m.style.display='none';document.body.classList.remove('modal-open');sessionStorage.setItem('promoDismissed','1');}}
+    document.addEventListener('click',e=>{if(e.target && e.target.id==='promoCloseBtn') closePromo();});
+    window.addEventListener('DOMContentLoaded',()=>{if(!sessionStorage.getItem('promoDismissed')) showPromo();});
+
+    (function(){const howto=document.getElementById('howToPlayModal');if(howto) howto.style.display='none';})();
+    function showHowToPlay(){const m=document.getElementById('howToPlayModal');if(m) m.style.display='flex';document.body.classList.add('modal-open');}
+    function closeHowToPlay(){const m=document.getElementById('howToPlayModal');if(m) m.style.display='none';document.body.classList.remove('modal-open');}
     window.showHowToPlay = showHowToPlay;
     window.closeHowToPlay = closeHowToPlay;
 
-    // Fullscreen toggle
+    /* ========= Fullscreen ========= */
     (function(){
       const btn=document.getElementById('fsToggle'); const root=document.documentElement;
       if(!document.fullscreenEnabled) return; btn.hidden=false;
-      function update(){ const a=!!document.fullscreenElement; btn.title=a?'Exit fullscreen':'Enter fullscreen'; btn.setAttribute('aria-label',btn.title); btn.innerText=a?'×':'⛶'; }
-      async function toggle(){ try{ if(!document.fullscreenElement) await root.requestFullscreen(); else await document.exitFullscreen(); }catch(e){console.error(e);}finally{update();} }
+      function update(){const a=!!document.fullscreenElement; btn.title=a?'Exit fullscreen':'Enter fullscreen'; btn.setAttribute('aria-label',btn.title); btn.innerText=a?'×':'⛶';}
+      async function toggle(){try{if(!document.fullscreenElement) await root.requestFullscreen(); else await document.exitFullscreen();}catch(e){console.error(e);}finally{update();}}
       btn.addEventListener('click',toggle); document.addEventListener('fullscreenchange',update); update();
     })();
 
-    /* Ensure the BUST pulse & labels always apply (even offline) */
-    (function () {
-      function ensureLabels(backEl) {
-        if (!backEl.querySelector('.bust-label.top')) {
-          const t = document.createElement('div');
-          t.className = 'bust-label top';
-          t.textContent = 'BUST';
-          backEl.appendChild(t);
+    /* ========= Game ========= */
+    const RESTART_DELAY = 3000;
+    const FADE_MS = 350;
+
+    let deck = [];             // shuffled numbers 1..7
+    let revealed = [];         // booleans
+    let gameOver = false;
+    let requiredPosition = null; // 1..7 or null for free first pick
+    let winCount = 0, loseCount = 0;
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function buildCard(i) {
+      const wrap = document.createElement('div');
+      wrap.className = 'card-container';
+
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.index = String(i);
+
+      const inner = document.createElement('div');
+      inner.className = 'card-inner';
+
+      const front = document.createElement('div');
+      front.className = 'card-face card-front';
+
+      const back = document.createElement('div');
+      back.className = 'card-face card-back';
+      /* ✅ number lives in its own span so later text updates won't remove labels */
+      const numSpan = document.createElement('span');
+      numSpan.className = 'num';
+      back.appendChild(numSpan);
+
+      inner.appendChild(front);
+      inner.appendChild(back);
+      card.appendChild(inner);
+      wrap.appendChild(card);
+
+      const label = document.createElement('div');
+      label.className = 'position-label';
+      label.textContent = String(i + 1);
+      wrap.appendChild(label);
+
+      // click handler
+      card.addEventListener('click', () => onCardClick(i, card));
+
+      return wrap;
+    }
+
+    function startGame() {
+      deck = shuffle([1,2,3,4,5,6,7]);
+      revealed = Array(7).fill(false);
+      gameOver = false;
+      requiredPosition = null;
+
+      document.getElementById('winOverlay').classList.remove('show');
+
+      const cont = document.getElementById('cardContainer');
+      cont.innerHTML = '';
+      for (let i = 0; i < 7; i++) cont.appendChild(buildCard(i));
+    }
+
+    function revealBackText(cardEl, value, immediate=false) {
+      const back = cardEl.querySelector('.card-back');
+      if (!back) return;
+      const num = back.querySelector('.num') || (()=>{const s=document.createElement('span');s.className='num';back.appendChild(s);return s;})();
+      num.textContent = String(value);
+      if (immediate) back.classList.add('show-now');
+      else back.classList.remove('show-now');
+    }
+
+    function onCardClick(index, cardEl) {
+      if (gameOver) return;
+
+      // enforce required chain after first pick
+      if (requiredPosition !== null && index !== requiredPosition - 1) return;
+      if (revealed[index]) return;
+
+      // Flip the card
+      cardEl.classList.add('flipped');
+      revealed[index] = true;
+
+      const value = deck[index];
+
+      // Reveal number AFTER the flip begins (matches CSS delay, if you use one)
+      setTimeout(() => revealBackText(cardEl, value, false), 350);
+
+      // Win?
+      if (revealed.every(Boolean)) { return handleWin(); }
+
+      // Chain logic: next required position = value
+      requiredPosition = value;
+
+      // Bust if next required is already revealed
+      if (revealed[requiredPosition - 1]) {
+        return handleBust(index);
+      }
+    }
+
+    function ensureBustLabels(backEl) {
+      if (!backEl.querySelector('.bust-label.top')) {
+        const t=document.createElement('div'); t.className='bust-label top'; t.textContent='BUST'; backEl.appendChild(t);
+      }
+      if (!backEl.querySelector('.bust-label.bottom')) {
+        const b=document.createElement('div'); b.className='bust-label bottom'; b.textContent='BUST'; backEl.appendChild(b);
+      }
+    }
+
+    function handleBust(clickedIndex) {
+      gameOver = true;
+      loseCount++;
+      document.getElementById('loseCount').textContent = String(loseCount);
+
+      const cards = document.querySelectorAll('.card');
+      const card = cards[clickedIndex];
+      if (card) {
+        const back = card.querySelector('.card-back');
+        if (back) {
+          // ✅ Set the number without destroying labels
+          const num = back.querySelector('.num') || (()=>{const s=document.createElement('span');s.className='num';back.appendChild(s);return s;})();
+          if (!num.textContent) num.textContent = String(deck[clickedIndex]);
+
+          back.classList.add('show-now');
+          ensureBustLabels(back);
         }
-        if (!backEl.querySelector('.bust-label.bottom')) {
-          const b = document.createElement('div');
-          b.className = 'bust-label bottom';
-          b.textContent = 'BUST';
-          backEl.appendChild(b);
-        }
+        card.classList.add('flipped', 'bustFlash', 'pulse');
       }
-      function wrapBust(fn) {
-        return function (clickedIndex) {
-          const cards = document.querySelectorAll('.card');
-          const card  = cards && cards[clickedIndex];
-          if (card) {
-            card.classList.add('pulse', 'bustFlash');       // zoom + red flash
-            const back = card.querySelector('.card-back');
-            if (back) ensureLabels(back);
-          }
-          return fn.apply(this, arguments);
-        };
-      }
-      if (typeof window.bust === 'function') {
-        window.bust = wrapBust(window.bust);
-      } else {
-        window.addEventListener('load', () => {
-          if (typeof window.bust === 'function') {
-            window.bust = wrapBust(window.bust);
-          }
-        });
-      }
-    })();
+
+      // gentle restart after delay
+      const cont = document.getElementById('cardContainer');
+      setTimeout(() => cont.classList.add('fade-out'), RESTART_DELAY - FADE_MS);
+      setTimeout(() => { cont.classList.remove('fade-out'); startGame(); }, RESTART_DELAY);
+    }
+
+    function handleWin() {
+      gameOver = true;
+      winCount++;
+      document.getElementById('winCount').textContent = String(winCount);
+
+      // Flip all to back & show numbers
+      document.querySelectorAll('.card').forEach((c, i) => {
+        c.classList.add('flipped');
+        revealBackText(c, deck[i], true); // make sure visible
+      });
+
+      // Win overlay + confetti
+      document.getElementById('winOverlay').classList.add('show');
+      if (typeof window.launchConfetti === 'function') window.launchConfetti(3000);
+
+      // restart
+      const cont = document.getElementById('cardContainer');
+      setTimeout(() => cont.classList.add('fade-out'), RESTART_DELAY - FADE_MS);
+      setTimeout(() => {
+        document.getElementById('winOverlay').classList.remove('show');
+        cont.classList.remove('fade-out');
+        startGame();
+      }, RESTART_DELAY);
+    }
+
+    // Boot it up
+    startGame();
   </script>
 </body>
 </html>
