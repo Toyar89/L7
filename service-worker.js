@@ -5,6 +5,7 @@ const urlsToCache = [
   "logo.png",
   "icon-192.png",
   "icon-512.png",
+  "oasis.jpg",
   "manifest.json"
 ];
 
@@ -19,5 +20,6 @@ self.addEventListener("fetch", event => {
     caches.match(event.request).then(response => response || fetch(event.request))
   );
 });
+
 
 
