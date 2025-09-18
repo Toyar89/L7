@@ -6,13 +6,9 @@
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
   <title>LUCKY 7</title>
 
-  <!-- PWA -->
+  <!-- PWA (optional while offline) -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#17173A" />
-
-  <!-- iOS support -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <link rel="apple-touch-icon" href="icon-512.png">
 
   <style>
@@ -26,14 +22,14 @@
       -webkit-text-size-adjust: none;
       touch-action: manipulation;
       overscroll-behavior: none;
-      overflow: hidden;                /* <-- no page scrollbar */
+      overflow: hidden;                /* only .app may scroll */
     }
-    body.modal-open { overflow: hidden; height: 100%; } /* lock bg while a modal is open */
+    body.modal-open { overflow: hidden; height: 100%; }
 
     .app {
-      height: 100dvh;                  /* fill the viewport height */
+      height: 100dvh;
       display: flex; flex-direction: column;
-      overflow: auto;                  /* <-- the only scrollbar, if needed */
+      overflow: auto;
       -webkit-overflow-scrolling: touch;
       padding:
         env(safe-area-inset-top)
@@ -48,13 +44,48 @@
     }
 
     .logo { width: clamp(160px, 30vw, 360px); height: auto; margin: 0 auto 18px; }
+
     .cards { display:flex; justify-content:center; flex-wrap:wrap; gap:12px; margin:20px 0; }
     .card-container { perspective: 1000px; }
-    .card-inner { width:clamp(90px,12vw,120px); height:clamp(150px,21vw,200px); position:relative; transform-style:preserve-3d; transition:transform .6s; cursor:pointer; }
+
+    /* Wrapper owns border, radius, background & shadow (prevents mid-flip peek) */
+    .card {
+      border-radius: 12px;
+      border: 3px solid #fff;
+      background: #fff;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0,0,0,.3);
+      transform-origin: center center;             /* for pulse */
+    }
+
+    .card-inner {
+      width:clamp(90px,12vw,120px);
+      height:clamp(150px,21vw,200px);
+      position:relative;
+      transform-style:preserve-3d;
+      transition:transform .6s;
+      cursor:pointer;
+    }
     .card.flipped .card-inner { transform: rotateY(180deg); cursor: default; }
-    .card-face { position:absolute; inset:0; border-radius:12px; backface-visibility:hidden; display:flex; align-items:center; justify-content:center; font-size:clamp(28px,4vw,48px); font-weight:bold; box-shadow:0 4px 8px rgba(0,0,0,.3); }
-    .card-front { background:royalblue; border:3px solid #fff; }
-    .card-back  { background:var(--card); color:#000; border:3px solid #fff; transform:rotateY(180deg); position:relative; }
+
+    /* Faces fill the card; no shadows here to avoid bleed while rotating */
+    .card-face {
+      position:absolute; inset:0; width:100%; height:100%;
+      border-radius: inherit;
+      box-sizing: border-box;
+      display:flex; align-items:center; justify-content:center;
+      font-size:clamp(28px,4vw,48px); font-weight:bold;
+      backface-visibility:hidden; -webkit-backface-visibility:hidden;
+      box-shadow:none;
+    }
+    .card-front { background: royalblue; }
+    .card-back  {
+      background: var(--card);
+      color:#000;
+      transform: rotateY(180deg);
+      position:absolute; inset:0;
+    }
+
     .position-label { font-size:clamp(14px,2vw,18px); margin-top:6px; color:var(--fg); }
 
     .button-row { display:flex; justify-content:center; gap:16px; margin-top:15px; }
@@ -74,18 +105,19 @@
 
     .copyright{ font-size:1em; margin-top:10px; opacity:.8; }
 
+    /* Confetti canvas (visible above game, below overlays) */
+    canvas.confetti { position:fixed; inset:0; pointer-events:none; z-index:10000; }
+
     /* Fullscreen toggle */
     .fs-toggle{ position:fixed; top:10px; right:10px; width:34px; height:34px; line-height:30px; text-align:center; font-size:20px; font-weight:900; color:#fff; background:rgba(0,0,0,.35); border:2px solid #fff; border-radius:8px; cursor:pointer; z-index:10002; backdrop-filter:blur(2px); }
     .fs-toggle:active{ transform:scale(.96); }
 
     /* ===================== MODALS ===================== */
-    /* Promo / Ad modal overlay */
     #promoModal{
-      display:none; position:fixed; z-index:10000; inset:0;
+      display:none; position:fixed; z-index:10050; inset:0;
       background:rgba(0,0,0,.75); backdrop-filter:blur(2px);
-      overflow:auto;                 /* scroll inside overlay if needed */
+      overflow:auto;
     }
-    /* Promo card raised */
     #promoContent{
       background:#1D1D3F; color:#fff;
       margin:32px auto 0;
@@ -95,23 +127,44 @@
     }
     @media (max-height:640px){ #promoContent{ margin:16px auto 0; } }
 
-    /* Centered How-to modal overlay */
     #howToPlayModal{
-      display:none; position:fixed; z-index:10000; inset:0;
+      display:none; position:fixed; z-index:10060; inset:0;
       background:rgba(0,0,0,.75); backdrop-filter:blur(2px);
       display:flex; align-items:center; justify-content:center;
-      padding:16px;                 /* small gutter on tiny screens */
+      padding:16px;
     }
     #howToPlayContent{
       background:#1D1D3F; color:#fff;
       padding:20px 22px; border-radius:12px;
       max-width:420px; width:calc(100% - 40px);
       text-align:left; box-shadow:0 10px 30px rgba(0,0,0,.35);
-      margin:0; /* true centering */
-      max-height:90vh; overflow:auto; /* keep it usable on very small screens */
+      margin:0; max-height:90vh; overflow:auto;
     }
     .howto-actions{ text-align:center; margin-top:14px; }
     .howto-actions button{ padding:10px 24px; background:#fff; color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
+
+    /* ========= Bust effects (whole card pulses) ========= */
+    @keyframes bustBackgroundFlash {
+      0%{ background:rgba(255,0,0,.30) }
+      50%{ background:rgba(255,0,0,.90) }
+      100%{ background:rgba(255,0,0,.30) }
+    }
+    .card.bustFlash .card-back { animation: bustBackgroundFlash .6s infinite; color:#fff; }
+
+    @keyframes bustPulseCard {
+      0% { transform: scale(1); }
+      50%{ transform: scale(1.10); }
+      100%{ transform: scale(1); }
+    }
+    .card.pulse { animation: bustPulseCard .75s ease-in-out infinite; will-change: transform; }
+
+    .bust-label {
+      position:absolute; left:6px; right:6px; text-align:center;
+      font-weight:900; color:#fff; letter-spacing:.08em;
+      text-shadow:0 2px 4px rgba(0,0,0,.6); pointer-events:none;
+      font-size:clamp(16px,2.5vw,22px);
+    }
+    .bust-label.top{ top:6px } .bust-label.bottom{ bottom:6px }
   </style>
 </head>
 
@@ -142,7 +195,7 @@
 
   <!-- Promo / Ad modal -->
   <div id="promoModal" aria-modal="true" role="dialog">
-    <div id="promoContent">     
+    <div id="promoContent">
       <a href="https://www.oasisinet.com/" target="_blank" rel="noopener">
         <img src="oasis.jpg" alt="Ad" style="display:block; width:100%; height:auto; border-radius:8px; margin-bottom:12px;">
       </a>
@@ -153,7 +206,7 @@
     </div>
   </div>
 
-  <!-- How to Play modal (hidden on load; opens only via button) -->
+  <!-- How to Play modal -->
   <div id="howToPlayModal" aria-modal="true" role="dialog">
     <div id="howToPlayContent">
       <h2 style="text-align:center; margin:0 0 10px;">How to Play</h2>
@@ -170,9 +223,9 @@
   <!-- Your game logic -->
   <script src="app.js"></script>
 
-  <!-- Minimal helpers -->
+  <!-- Minimal helpers + bust pulse wrapper -->
   <script>
-    // Promo modal: show ONCE per session at load; only Close button dismisses.
+    // Promo modal: once per session
     function showPromo(){
       const m=document.getElementById('promoModal');
       if(!m) return;
@@ -193,14 +246,14 @@
       if(!sessionStorage.getItem('promoDismissed')) showPromo();
     });
 
-    // How-to modal: HIDDEN on load; opens ONLY when button is pressed
+    // How-to modal handlers
     (function(){
-      const howto = document.getElementById('howToPlayModal');
-      if (howto) howto.style.display = 'none';  // ensure hidden on first paint
+      const howto=document.getElementById('howToPlayModal');
+      if(howto) howto.style.display='none';
     })();
     function showHowToPlay(){
       const m=document.getElementById('howToPlayModal');
-      if(m) m.style.display='flex';     // centered (flex)
+      if(m) m.style.display='flex';
       document.body.classList.add('modal-open');
     }
     function closeHowToPlay(){
@@ -211,13 +264,52 @@
     window.showHowToPlay = showHowToPlay;
     window.closeHowToPlay = closeHowToPlay;
 
-    // Fullscreen toggle (unchanged)
+    // Fullscreen toggle
     (function(){
       const btn=document.getElementById('fsToggle'); const root=document.documentElement;
       if(!document.fullscreenEnabled) return; btn.hidden=false;
       function update(){ const a=!!document.fullscreenElement; btn.title=a?'Exit fullscreen':'Enter fullscreen'; btn.setAttribute('aria-label',btn.title); btn.innerText=a?'×':'⛶'; }
       async function toggle(){ try{ if(!document.fullscreenElement) await root.requestFullscreen(); else await document.exitFullscreen(); }catch(e){console.error(e);}finally{update();} }
       btn.addEventListener('click',toggle); document.addEventListener('fullscreenchange',update); update();
+    })();
+
+    /* Ensure the BUST pulse & labels always apply (even offline) */
+    (function () {
+      function ensureLabels(backEl) {
+        if (!backEl.querySelector('.bust-label.top')) {
+          const t = document.createElement('div');
+          t.className = 'bust-label top';
+          t.textContent = 'BUST';
+          backEl.appendChild(t);
+        }
+        if (!backEl.querySelector('.bust-label.bottom')) {
+          const b = document.createElement('div');
+          b.className = 'bust-label bottom';
+          b.textContent = 'BUST';
+          backEl.appendChild(b);
+        }
+      }
+      function wrapBust(fn) {
+        return function (clickedIndex) {
+          const cards = document.querySelectorAll('.card');
+          const card  = cards && cards[clickedIndex];
+          if (card) {
+            card.classList.add('pulse', 'bustFlash');       // zoom + red flash
+            const back = card.querySelector('.card-back');
+            if (back) ensureLabels(back);
+          }
+          return fn.apply(this, arguments);
+        };
+      }
+      if (typeof window.bust === 'function') {
+        window.bust = wrapBust(window.bust);
+      } else {
+        window.addEventListener('load', () => {
+          if (typeof window.bust === 'function') {
+            window.bust = wrapBust(window.bust);
+          }
+        });
+      }
     })();
   </script>
 </body>
