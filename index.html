@@ -73,7 +73,7 @@
     .card-front { background: royalblue; border: 3px solid #fff; box-sizing: border-box; }
     .card-back  { background: var(--card); color: #000; border: 3px solid #fff; box-sizing: border-box; transform: rotateY(180deg); position: relative; }
 
-    /* ✅ keep the back face fully visible immediately on bust */
+    /* keep the back face fully visible immediately on bust */
     .card-back.show-now {
       opacity: 1 !important;
       transition-delay: 0s !important;
@@ -109,12 +109,84 @@
     .fs-toggle{ position:fixed; top:10px; right:10px; width:34px; height:34px; line-height:30px; text-align:center; font-size:20px; font-weight:900; color:#fff; background:rgba(0,0,0,.35); border:2px solid #fff; border-radius:8px; cursor:pointer; z-index:10002; backdrop-filter:blur(2px); }
     .fs-toggle:active{ transform:scale(.96); }
 
-    /* Promo modal */
-    #promoModal{ display:none; position:fixed; z-index:10050; inset:0; background:rgba(0,0,0,.75); backdrop-filter:blur(2px); overflow:auto; }
-    #promoContent{ background:#1D1D3F; color:#fff; margin:32px auto 0; padding:20px 22px; border-radius:12px; max-width:420px; width:calc(100% - 40px); text-align:left; box-shadow:0 10px 30px rgba(0,0,0,.35); }
-    @media (max-height:640px){ #promoContent{ margin:16px auto 0; } }
+    /* ================= Promo modal (base = desktop card) ================= */
+    #promoModal{
+      display:none; position:fixed; z-index:10050; inset:0;
+      background:rgba(0,0,0,.75); backdrop-filter:blur(2px);
+      overflow:auto;
+    }
+    #promoContent{
+      background:#1D1D3F; color:#fff;
+      margin:32px auto 0;
+      padding:20px 22px;
+      border-radius:12px;
+      max-width:420px;
+      width:calc(100% - 40px);
+      text-align:left;
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+      display:flex;
+      flex-direction:column;
+      position:relative; /* needed for mobile overlay mode */
+    }
+    #promoContent .ad-hero{
+      width:100%;
+      height:auto;
+      display:block;
+      border-radius:8px;
+      margin-bottom:12px;
+      object-fit:cover;
+    }
+    .promo-body{ margin-bottom:10px; }
+    .promo-actions{
+      display:flex; gap:10px; justify-content:center; margin-top:10px;
+    }
+    .promo-btn{
+      flex:1; text-align:center;
+      padding:6px 12px;
+      font-size:14px;
+      font-weight:700;
+      border-radius:6px;
+      cursor:pointer;
+      border:none;
+    }
+    .promo-btn.learn{ background:#FFD700; color:#000; text-decoration:none; }
+    .promo-btn.close{ background:#fff; color:#000; }
 
-    /* How-to modal */
+    /* ======== Mobile full-viewport: image fills screen, buttons overlay ======== */
+    @media (max-width: 640px), (pointer: coarse) {
+      #promoModal { padding:0; }
+      #promoContent{
+        /* Turn the content box into a full-screen canvas */
+        position:fixed; inset:0;
+        margin:0; padding:0;
+        width:100vw; max-width:none;
+        height:100dvh; min-height:100vh; /* fallback */
+        border-radius:0;
+        box-shadow:none;
+        overflow:hidden;               /* prevent internal scroll here */
+      }
+      #promoContent .ad-hero{
+        /* Image fills entire viewport */
+        position:absolute; inset:0;
+        width:100%; height:100%;
+        margin:0; border-radius:0;
+        object-fit:cover;              /* cover while cropping */
+      }
+      .promo-body{ display:none; }     /* optional: hide body on mobile */
+      .promo-actions{
+        position:absolute;
+        left:0; right:0; bottom:0;
+        margin:0;
+        padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);
+        background: linear-gradient(to top, rgba(0,0,0,.68), rgba(0,0,0,0));
+        box-shadow:none;
+      }
+    }
+    @media (max-height: 640px) {
+      #promoContent { margin:0; }
+    }
+
+    /* ================= How-to modal ================= */
     #howToPlayModal{ display:none; position:fixed; z-index:10060; inset:0; background:rgba(0,0,0,.75); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; padding:16px; }
     #howToPlayContent{ background:#1D1D3F; color:#fff; padding:20px 22px; border-radius:12px; max-width:420px; width:calc(100% - 40px); text-align:left; box-shadow:0 10px 30px rgba(0,0,0,.35); margin:0; max-height:90vh; overflow:auto; }
     .howto-actions{ text-align:center; margin-top:14px; }
@@ -178,12 +250,18 @@
   <!-- Promo / Ad modal -->
   <div id="promoModal" aria-modal="true" role="dialog">
     <div id="promoContent">
+      <!-- Full-viewport hero on mobile -->
       <a href="https://www.oasisinet.com/" target="_blank" rel="noopener">
-        <img src="oasis.jpg" alt="Ad" style="display:block; width:100%; height:auto; border-radius:8px; margin-bottom:12px;">
+        <img class="ad-hero" src="oasis.jpg" alt="Ad">
       </a>
-      <div style="display:flex; gap:10px; justify-content:center; margin-top:10px;">
-        <a href="https://www.oasisinet.com/" target="_blank" rel="noopener" style="flex:1; text-align:center; padding:6px 12px; font-size:14px; font-weight:700; background:#FFD700; color:#000; text-decoration:none; border-radius:6px;">Learn more</a>
-        <button id="promoCloseBtn" style="flex:1; text-align:center; padding:6px 12px; font-size:14px; font-weight:700; background:#fff; color:#000; border:none; border-radius:6px;">Close &amp; Play</button>
+
+      <!-- (Desktop only) space for extra text if you want -->
+      <div class="promo-body"></div>
+
+      <!-- Actions (overlay on mobile) -->
+      <div class="promo-actions">
+        <a href="https://www.oasisinet.com/" target="_blank" rel="noopener" class="promo-btn learn">Learn more</a>
+        <button id="promoCloseBtn" class="promo-btn close">Close &amp; Play</button>
       </div>
     </div>
   </div>
@@ -201,7 +279,7 @@
     </div>
   </div>
 
-  <!-- ====== Inline Game Logic (no external JS needed) ====== -->
+  <!-- ====== Inline Game Logic (unchanged) ====== -->
   <script>
     /* ========= Confetti ========= */
     (function () {
@@ -324,7 +402,6 @@
 
       const back = document.createElement('div');
       back.className = 'card-face card-back';
-      /* ✅ number lives in its own span so later text updates won't remove labels */
       const numSpan = document.createElement('span');
       numSpan.className = 'num';
       back.appendChild(numSpan);
@@ -339,7 +416,6 @@
       label.textContent = String(i + 1);
       wrap.appendChild(label);
 
-      // click handler
       card.addEventListener('click', () => onCardClick(i, card));
 
       return wrap;
@@ -369,27 +445,18 @@
 
     function onCardClick(index, cardEl) {
       if (gameOver) return;
-
-      // enforce required chain after first pick
       if (requiredPosition !== null && index !== requiredPosition - 1) return;
       if (revealed[index]) return;
 
-      // Flip the card
       cardEl.classList.add('flipped');
       revealed[index] = true;
 
       const value = deck[index];
-
-      // Reveal number AFTER the flip begins (matches CSS delay, if you use one)
       setTimeout(() => revealBackText(cardEl, value, false), 350);
 
-      // Win?
       if (revealed.every(Boolean)) { return handleWin(); }
 
-      // Chain logic: next required position = value
       requiredPosition = value;
-
-      // Bust if next required is already revealed
       if (revealed[requiredPosition - 1]) {
         return handleBust(index);
       }
@@ -414,17 +481,14 @@
       if (card) {
         const back = card.querySelector('.card-back');
         if (back) {
-          // ✅ Set the number without destroying labels
           const num = back.querySelector('.num') || (()=>{const s=document.createElement('span');s.className='num';back.appendChild(s);return s;})();
           if (!num.textContent) num.textContent = String(deck[clickedIndex]);
-
           back.classList.add('show-now');
           ensureBustLabels(back);
         }
         card.classList.add('flipped', 'bustFlash', 'pulse');
       }
 
-      // gentle restart after delay
       const cont = document.getElementById('cardContainer');
       setTimeout(() => cont.classList.add('fade-out'), RESTART_DELAY - FADE_MS);
       setTimeout(() => { cont.classList.remove('fade-out'); startGame(); }, RESTART_DELAY);
@@ -435,17 +499,14 @@
       winCount++;
       document.getElementById('winCount').textContent = String(winCount);
 
-      // Flip all to back & show numbers
       document.querySelectorAll('.card').forEach((c, i) => {
         c.classList.add('flipped');
-        revealBackText(c, deck[i], true); // make sure visible
+        revealBackText(c, deck[i], true);
       });
 
-      // Win overlay + confetti
       document.getElementById('winOverlay').classList.add('show');
       if (typeof window.launchConfetti === 'function') window.launchConfetti(3000);
 
-      // restart
       const cont = document.getElementById('cardContainer');
       setTimeout(() => cont.classList.add('fade-out'), RESTART_DELAY - FADE_MS);
       setTimeout(() => {
