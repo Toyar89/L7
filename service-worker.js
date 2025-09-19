@@ -1,4 +1,4 @@
-const CACHE_NAME = "lucky7-cache-v22";
+const CACHE_NAME = "lucky7-cache-v23";
 const urlsToCache = [
   "index.html",
   "app.js",
@@ -20,6 +20,7 @@ self.addEventListener("fetch", event => {
     caches.match(event.request).then(response => response || fetch(event.request))
   );
 });
+
 
 
 
