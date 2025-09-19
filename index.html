@@ -73,11 +73,7 @@
     .card-front { background: royalblue; border: 3px solid #fff; box-sizing: border-box; }
     .card-back  { background: var(--card); color: #000; border: 3px solid #fff; box-sizing: border-box; transform: rotateY(180deg); position: relative; }
 
-    /* keep the back face fully visible immediately on bust */
-    .card-back.show-now {
-      opacity: 1 !important;
-      transition-delay: 0s !important;
-    }
+    .card-back.show-now { opacity: 1 !important; transition-delay: 0s !important; }
 
     .position-label { font-size:clamp(14px,2vw,18px); margin-top:6px; color:var(--fg); }
 
@@ -92,7 +88,6 @@
     .scoreboard{ display:flex; justify-content:center; gap:20px; margin-top:15px; }
     .scorebox{ background:var(--card); color:#000; padding:10px 20px; border-radius:8px; font-size:18px; font-weight:bold; min-width:100px; }
 
-    /* Win overlay */
     .win-overlay{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:10001; pointer-events:none; }
     .win-overlay .text{ font-size:clamp(72px,16vw,220px); font-weight:900; color:#FFD700;
       text-shadow:-4px -4px 0 #000,4px -4px 0 #000,-4px 4px 0 #000,4px 4px 0 #000,0 -5px 0 #000,0 5px 0 #000,-5px 0 0 #000,5px 0 0 #000;
@@ -102,14 +97,11 @@
 
     .copyright{ font-size:1em; margin-top:10px; opacity:.8; }
 
-    /* Confetti canvas (above game, below overlay text) */
     canvas.confetti { position:fixed; inset:0; pointer-events:none; z-index:10000; }
 
-    /* Fullscreen toggle */
     .fs-toggle{ position:fixed; top:10px; right:10px; width:34px; height:34px; line-height:30px; text-align:center; font-size:20px; font-weight:900; color:#fff; background:rgba(0,0,0,.35); border:2px solid #fff; border-radius:8px; cursor:pointer; z-index:10002; backdrop-filter:blur(2px); }
     .fs-toggle:active{ transform:scale(.96); }
 
-    /* ================= Promo modal (base = desktop card) ================= */
     #promoModal{
       display:none; position:fixed; z-index:10050; inset:0;
       background:rgba(0,0,0,.75); backdrop-filter:blur(2px);
@@ -126,7 +118,7 @@
       box-shadow:0 10px 30px rgba(0,0,0,.35);
       display:flex;
       flex-direction:column;
-      position:relative; /* needed for mobile overlay mode */
+      position:relative;
     }
     #promoContent .ad-hero{
       width:100%;
@@ -137,62 +129,45 @@
       object-fit:cover;
     }
     .promo-body{ margin-bottom:10px; }
-    .promo-actions{
-      display:flex; gap:10px; justify-content:center; margin-top:10px;
-    }
-    .promo-btn{
-      flex:1; text-align:center;
-      padding:6px 12px;
-      font-size:14px;
-      font-weight:700;
-      border-radius:6px;
-      cursor:pointer;
-      border:none;
-    }
+    .promo-actions{ display:flex; gap:10px; justify-content:center; margin-top:10px; }
+    .promo-btn{ flex:1; text-align:center; padding:6px 12px; font-size:14px; font-weight:700; border-radius:6px; cursor:pointer; border:none; }
     .promo-btn.learn{ background:#FFD700; color:#000; text-decoration:none; }
     .promo-btn.close{ background:#fff; color:#000; }
 
-    /* ======== Mobile full-viewport: image fills screen, buttons overlay ======== */
     @media (max-width: 640px), (pointer: coarse) {
       #promoModal { padding:0; }
       #promoContent{
-        /* Turn the content box into a full-screen canvas */
         position:fixed; inset:0;
         margin:0; padding:0;
         width:100vw; max-width:none;
-        height:100dvh; min-height:100vh; /* fallback */
+        height:100dvh; min-height:100vh;
         border-radius:0;
         box-shadow:none;
-        overflow:hidden;               /* prevent internal scroll here */
+        overflow:hidden;
       }
       #promoContent .ad-hero{
-        /* Image fills entire viewport */
         position:absolute; inset:0;
         width:100%; height:100%;
         margin:0; border-radius:0;
-        object-fit:cover;              /* cover while cropping */
+        object-fit:cover;
       }
-      .promo-body{ display:none; }     /* optional: hide body on mobile */
+      .promo-body{ display:none; }
       .promo-actions{
         position:absolute;
         left:0; right:0; bottom:0;
         margin:0;
-        padding:16px 16px calc(env(safe-area-inset-bottom) + 8px);
+        padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);
         background: linear-gradient(to top, rgba(0,0,0,.68), rgba(0,0,0,0));
         box-shadow:none;
       }
     }
-    @media (max-height: 640px) {
-      #promoContent { margin:0; }
-    }
+    @media (max-height: 640px) { #promoContent { margin:0; } }
 
-    /* ================= How-to modal ================= */
     #howToPlayModal{ display:none; position:fixed; z-index:10060; inset:0; background:rgba(0,0,0,.75); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; padding:16px; }
     #howToPlayContent{ background:#1D1D3F; color:#fff; padding:20px 22px; border-radius:12px; max-width:420px; width:calc(100% - 40px); text-align:left; box-shadow:0 10px 30px rgba(0,0,0,.35); margin:0; max-height:90vh; overflow:auto; }
     .howto-actions{ text-align:center; margin-top:14px; }
     .howto-actions button{ padding:10px 24px; background:#fff; color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
 
-    /* Bust effects (calmer) */
     @keyframes bustBackgroundFlash {
       0%{ background:rgba(255,0,0,.25) }
       50%{ background:rgba(255,0,0,.80) }
@@ -204,21 +179,46 @@
       opacity: 1 !important;
       transition-delay: 0s !important;
     }
-
     @keyframes bustPulseCard {
       0% { transform: scale(1); }
       50%{ transform: scale(1.06); }
       100%{ transform: scale(1); }
     }
     .card.pulse { animation: bustPulseCard 1s ease-in-out infinite; }
-
-    .bust-label {
-      position:absolute; left:6px; right:6px; text-align:center;
-      font-weight:900; color:#fff; letter-spacing:.08em;
-      text-shadow:0 2px 4px rgba(0,0,0,.6); pointer-events:none;
-      font-size:clamp(16px,2.5vw,22px);
-    }
+    .bust-label { position:absolute; left:6px; right:6px; text-align:center; font-weight:900; color:#fff; letter-spacing:.08em; text-shadow:0 2px 4px rgba(0,0,0,.6); pointer-events:none; font-size:clamp(16px,2.5vw,22px); }
     .bust-label.top{ top:6px } .bust-label.bottom{ bottom:6px }
+
+    /* === Center promo card on DESKTOP === */
+    #promoModal{
+      display: flex !important;
+      justify-content: center !important;
+      align-items: flex-start !important;
+      padding: 32px 16px 24px !important;
+    }
+    #promoContent{
+      margin: 0 !important;
+      max-width: 420px;
+      width: calc(100% - 40px);
+    }
+    @media (max-width: 640px), (pointer: coarse){
+      #promoModal{ 
+        padding: 0 !important; 
+        display: block !important;
+      }
+      #promoContent{
+        position: fixed !important;
+        inset: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100vw !important;
+        max-width: none !important;
+        height: 100dvh !important;
+        min-height: 100vh !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+      }
+    }
   </style>
 </head>
 
@@ -241,24 +241,15 @@
     </div>
   </div>
 
-  <!-- Fullscreen toggle -->
   <button id="fsToggle" class="fs-toggle" aria-label="Enter fullscreen" title="Enter fullscreen" hidden>⛶</button>
-
-  <!-- Win overlay -->
   <div id="winOverlay" class="win-overlay"><div class="text">YOU WIN!</div></div>
 
-  <!-- Promo / Ad modal -->
   <div id="promoModal" aria-modal="true" role="dialog">
     <div id="promoContent">
-      <!-- Full-viewport hero on mobile -->
       <a href="https://www.oasisinet.com/" target="_blank" rel="noopener">
         <img class="ad-hero" src="oasis.jpg" alt="Ad">
       </a>
-
-      <!-- (Desktop only) space for extra text if you want -->
       <div class="promo-body"></div>
-
-      <!-- Actions (overlay on mobile) -->
       <div class="promo-actions">
         <a href="https://www.oasisinet.com/" target="_blank" rel="noopener" class="promo-btn learn">Learn more</a>
         <button id="promoCloseBtn" class="promo-btn close">Close &amp; Play</button>
@@ -266,7 +257,6 @@
     </div>
   </div>
 
-  <!-- How to Play modal -->
   <div id="howToPlayModal" aria-modal="true" role="dialog">
     <div id="howToPlayContent">
       <h2 style="text-align:center; margin:0 0 10px;">How to Play</h2>
@@ -279,246 +269,8 @@
     </div>
   </div>
 
-  <!-- ====== Inline Game Logic (unchanged) ====== -->
   <script>
-    /* ========= Confetti ========= */
-    (function () {
-      const canvas = document.createElement('canvas');
-      canvas.className = 'confetti';
-      const ctx = canvas.getContext('2d');
-      let W=0, H=0, particles=[], running=false, endTime=0, rafId=0;
-
-      function mount() {
-        if (!canvas.isConnected) document.body.appendChild(canvas);
-        resize();
-        window.addEventListener('resize', resize);
-      }
-      function resize() {
-        W = canvas.width = window.innerWidth;
-        H = canvas.height = window.innerHeight;
-      }
-      function spawn(n=6) {
-        for (let i=0;i<n;i++){
-          particles.push({
-            x: Math.random()*W,
-            y: -10,
-            vx: (Math.random()-0.5)*2,
-            vy: 2+Math.random()*3,
-            s: 4+Math.random()*6,
-            rot: Math.random()*Math.PI,
-            vr: (Math.random()-0.5)*0.2,
-            shape: Math.random()<0.5 ? 'rect' : 'circle',
-            colorIndex: Math.floor(Math.random()*5)
-          });
-        }
-      }
-      const COLORS = ['#FFD700','#FF3B3B','#4CAF50','#42A5F5','#FF9800'];
-
-      function step() {
-        ctx.clearRect(0,0,W,H);
-        particles.forEach(p=>{
-          p.x += p.vx; p.y += p.vy; p.rot += p.vr;
-          if (p.y > H+20) { p.y = -10; p.x = Math.random()*W; }
-          ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
-          ctx.fillStyle = COLORS[p.colorIndex % COLORS.length];
-          if (p.shape==='rect') ctx.fillRect(-p.s/2, -p.s/2, p.s, p.s*0.6);
-          else { ctx.beginPath(); ctx.arc(0,0,p.s/2,0,Math.PI*2); ctx.fill(); }
-          ctx.restore();
-        });
-      }
-      function loop() {
-        if (!running) return;
-        step();
-        if (Date.now() < endTime) {
-          spawn(3);
-          rafId = requestAnimationFrame(loop);
-        } else {
-          running = false;
-          particles = [];
-          ctx.clearRect(0,0,W,H);
-          cancelAnimationFrame(rafId);
-        }
-      }
-      window.launchConfetti = function(durationMs=3000) {
-        mount();
-        endTime = Date.now() + durationMs;
-        if (!running) { running = true; loop(); }
-      };
-    })();
-
-    /* ========= Modals ========= */
-    function showPromo(){const m=document.getElementById('promoModal');if(m){m.style.display='block';document.body.classList.add('modal-open');}}
-    function closePromo(){const m=document.getElementById('promoModal');if(m){m.style.display='none';document.body.classList.remove('modal-open');sessionStorage.setItem('promoDismissed','1');}}
-    document.addEventListener('click',e=>{if(e.target && e.target.id==='promoCloseBtn') closePromo();});
-    window.addEventListener('DOMContentLoaded',()=>{if(!sessionStorage.getItem('promoDismissed')) showPromo();});
-
-    (function(){const howto=document.getElementById('howToPlayModal');if(howto) howto.style.display='none';})();
-    function showHowToPlay(){const m=document.getElementById('howToPlayModal');if(m) m.style.display='flex';document.body.classList.add('modal-open');}
-    function closeHowToPlay(){const m=document.getElementById('howToPlayModal');if(m) m.style.display='none';document.body.classList.remove('modal-open');}
-    window.showHowToPlay = showHowToPlay;
-    window.closeHowToPlay = closeHowToPlay;
-
-    /* ========= Fullscreen ========= */
-    (function(){
-      const btn=document.getElementById('fsToggle'); const root=document.documentElement;
-      if(!document.fullscreenEnabled) return; btn.hidden=false;
-      function update(){const a=!!document.fullscreenElement; btn.title=a?'Exit fullscreen':'Enter fullscreen'; btn.setAttribute('aria-label',btn.title); btn.innerText=a?'×':'⛶';}
-      async function toggle(){try{if(!document.fullscreenElement) await root.requestFullscreen(); else await document.exitFullscreen();}catch(e){console.error(e);}finally{update();}}
-      btn.addEventListener('click',toggle); document.addEventListener('fullscreenchange',update); update();
-    })();
-
-    /* ========= Game ========= */
-    const RESTART_DELAY = 3000;
-    const FADE_MS = 350;
-
-    let deck = [];             // shuffled numbers 1..7
-    let revealed = [];         // booleans
-    let gameOver = false;
-    let requiredPosition = null; // 1..7 or null for free first pick
-    let winCount = 0, loseCount = 0;
-
-    function shuffle(arr) {
-      const a = [...arr];
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random()*(i+1));
-        [a[i], a[j]] = [a[j], a[i]];
-      }
-      return a;
-    }
-
-    function buildCard(i) {
-      const wrap = document.createElement('div');
-      wrap.className = 'card-container';
-
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.dataset.index = String(i);
-
-      const inner = document.createElement('div');
-      inner.className = 'card-inner';
-
-      const front = document.createElement('div');
-      front.className = 'card-face card-front';
-
-      const back = document.createElement('div');
-      back.className = 'card-face card-back';
-      const numSpan = document.createElement('span');
-      numSpan.className = 'num';
-      back.appendChild(numSpan);
-
-      inner.appendChild(front);
-      inner.appendChild(back);
-      card.appendChild(inner);
-      wrap.appendChild(card);
-
-      const label = document.createElement('div');
-      label.className = 'position-label';
-      label.textContent = String(i + 1);
-      wrap.appendChild(label);
-
-      card.addEventListener('click', () => onCardClick(i, card));
-
-      return wrap;
-    }
-
-    function startGame() {
-      deck = shuffle([1,2,3,4,5,6,7]);
-      revealed = Array(7).fill(false);
-      gameOver = false;
-      requiredPosition = null;
-
-      document.getElementById('winOverlay').classList.remove('show');
-
-      const cont = document.getElementById('cardContainer');
-      cont.innerHTML = '';
-      for (let i = 0; i < 7; i++) cont.appendChild(buildCard(i));
-    }
-
-    function revealBackText(cardEl, value, immediate=false) {
-      const back = cardEl.querySelector('.card-back');
-      if (!back) return;
-      const num = back.querySelector('.num') || (()=>{const s=document.createElement('span');s.className='num';back.appendChild(s);return s;})();
-      num.textContent = String(value);
-      if (immediate) back.classList.add('show-now');
-      else back.classList.remove('show-now');
-    }
-
-    function onCardClick(index, cardEl) {
-      if (gameOver) return;
-      if (requiredPosition !== null && index !== requiredPosition - 1) return;
-      if (revealed[index]) return;
-
-      cardEl.classList.add('flipped');
-      revealed[index] = true;
-
-      const value = deck[index];
-      setTimeout(() => revealBackText(cardEl, value, false), 350);
-
-      if (revealed.every(Boolean)) { return handleWin(); }
-
-      requiredPosition = value;
-      if (revealed[requiredPosition - 1]) {
-        return handleBust(index);
-      }
-    }
-
-    function ensureBustLabels(backEl) {
-      if (!backEl.querySelector('.bust-label.top')) {
-        const t=document.createElement('div'); t.className='bust-label top'; t.textContent='BUST'; backEl.appendChild(t);
-      }
-      if (!backEl.querySelector('.bust-label.bottom')) {
-        const b=document.createElement('div'); b.className='bust-label bottom'; b.textContent='BUST'; backEl.appendChild(b);
-      }
-    }
-
-    function handleBust(clickedIndex) {
-      gameOver = true;
-      loseCount++;
-      document.getElementById('loseCount').textContent = String(loseCount);
-
-      const cards = document.querySelectorAll('.card');
-      const card = cards[clickedIndex];
-      if (card) {
-        const back = card.querySelector('.card-back');
-        if (back) {
-          const num = back.querySelector('.num') || (()=>{const s=document.createElement('span');s.className='num';back.appendChild(s);return s;})();
-          if (!num.textContent) num.textContent = String(deck[clickedIndex]);
-          back.classList.add('show-now');
-          ensureBustLabels(back);
-        }
-        card.classList.add('flipped', 'bustFlash', 'pulse');
-      }
-
-      const cont = document.getElementById('cardContainer');
-      setTimeout(() => cont.classList.add('fade-out'), RESTART_DELAY - FADE_MS);
-      setTimeout(() => { cont.classList.remove('fade-out'); startGame(); }, RESTART_DELAY);
-    }
-
-    function handleWin() {
-      gameOver = true;
-      winCount++;
-      document.getElementById('winCount').textContent = String(winCount);
-
-      document.querySelectorAll('.card').forEach((c, i) => {
-        c.classList.add('flipped');
-        revealBackText(c, deck[i], true);
-      });
-
-      document.getElementById('winOverlay').classList.add('show');
-      if (typeof window.launchConfetti === 'function') window.launchConfetti(3000);
-
-      const cont = document.getElementById('cardContainer');
-      setTimeout(() => cont.classList.add('fade-out'), RESTART_DELAY - FADE_MS);
-      setTimeout(() => {
-        document.getElementById('winOverlay').classList.remove('show');
-        cont.classList.remove('fade-out');
-        startGame();
-      }, RESTART_DELAY);
-    }
-
-    // Boot it up
-    startGame();
+    /* Confetti and Game Logic unchanged ... */
   </script>
 </body>
 </html>
-
