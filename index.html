@@ -195,10 +195,13 @@
       opacity: 1 !important;
       transition-delay: 0s !important;
     }
-    @keyframes bustPulseCard {
-      0% { transform: scale(1); }
-      50%{ transform: scale(1.06); }
-      100%{ transform: scale(1); }
+  @keyframes bustPulseCard {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.12); } /* bigger pulse */
+  100% { transform: scale(1); }
+}
+.card.pulse { animation: bustPulseCard 0.6s ease-in-out infinite; } /* faster */
+
     }
     .card.pulse { animation: bustPulseCard 1s ease-in-out infinite; }
     .bust-label { position:absolute; left:6px; right:6px; text-align:center; font-weight:900; color:#fff; letter-spacing:.08em; text-shadow:0 2px 4px rgba(0,0,0,.6); pointer-events:none; font-size:clamp(16px,2.5vw,22px); }
@@ -529,3 +532,4 @@
   </script>
 </body>
 </html>
+
